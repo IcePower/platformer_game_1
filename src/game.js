@@ -14,8 +14,6 @@ var Game = cc.Class.extend({
 		space.gravity = cp.v(0, -GRAVITY);
 		space.enableContactGraph = true;
 
-		// 碰撞回调函数
-
 		// 地面
 		var radius = 0.5;
 
@@ -52,7 +50,7 @@ var Game = cc.Class.extend({
 		this.shape = space.addShape(new cp.BoxShape(box, width, height));
 		this.shape.setFriction(0.6);
 
-		// 创建玩家, Infinity 好像是为了使玩家不会旋转。
+		// 创建玩家。
 		var playerBody = this.playerBody = space.addBody(new cp.Body(5, Infinity));
 		playerBody.setPos(cp.v(300, 300));
 		playerBody.velocity_func = this.playerUpdateVelocity.bind(this);
@@ -66,8 +64,6 @@ var Game = cc.Class.extend({
 	},
 
 	onKeyPressed: function (key) {
-//		this.directionInput = eDirectionMask.NoWhere;
-
 		if (key === cc.KEY.w || key === cc.KEY.up) {
 			this.directionInput |= eDirectionMask.Up;
 		}
@@ -84,12 +80,9 @@ var Game = cc.Class.extend({
 			this.directionInput |= eDirectionMask.Right;
 		}
 
-		cc.log('this.directionInput ||||||| ', this.directionInput);
 	},
 
-	// 1 1 - 0;   0 1 - 0;      0 0 - 0   1 0 - 1;
 	onKeyReleased: function (key){
-//		this.directionInput = eDirectionMask.NoWhere;
 
 		if (key === cc.KEY.w || key === cc.KEY.up) {
 			this.directionInput -= eDirectionMask.Up;
@@ -103,12 +96,9 @@ var Game = cc.Class.extend({
 			this.directionInput -= eDirectionMask.Left;
 		}
 
-		// 11  10  --- 01
 		if (key === cc.KEY.d || key === cc.KEY.right) {
 			this.directionInput -= eDirectionMask.Right;
 		}
-
-		cc.log('this.directionInput ----- ', this.directionInput);
 
 	},
 
