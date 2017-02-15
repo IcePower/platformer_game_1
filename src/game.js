@@ -5,15 +5,25 @@
  * Time: 下午7:51
  * To change this template use File | Settings | File Templates.
  */
-
-var Game = cc.Class.extend({
+var groundNormal= cp.v(0,0);
+var Game = 
+//cc.Layer.extend
+cc.Class.extend
+({
 	directionInput: eDirectionMask.NoWhere,
-
+	jumpState:0,
+//	groundNormal:null,
 	ctor: function () {
+//    this._super();
+		this.onEnter();
+
+	},
+  initPhysics:function() {
 		var space = this.space = new cp.Space();
 		space.gravity = cp.v(0, -GRAVITY);
 		space.enableContactGraph = true;
 
+//		this.groundNormal= cp.v(0,0);
 		// 地面
 		var radius = 0.5;
 
@@ -56,16 +66,47 @@ var Game = cc.Class.extend({
 		playerBody.velocity_func = this.playerUpdateVelocity.bind(this);
 
 		this.playerShape = space.addShape(new cp.CircleShape(playerBody, 30.0, cp.vzero));
-
+/*
+        this.space.setDefaultCollisionHandler(
+            this.collisionBegin.bind(this),
+						null,null,null
+//            this.collisionPre.bind(this),
+//            this.collisionPost.bind(this),
+//            this.collisionSeparate.bind(this)
+        );
+*/
+		},
+    onEnter : function() {
+//        cc.Class.prototype.onEnter.call(this);
+//        this._super();
+				console.log("onEnter");
+				this.initPhysics();
 	},
+ 	collisionBegin : function ( arbiter, space ) {
 
+    	this.playerBody.eachArbiter(function(arbiter){
+        var i;
+        for(i=0; i<arbiter.contacts.length; i++){            
+						var n = cp.vneg(this.contacts[i].n);
+						if(n.y > groundNormal.y){
+							groundNormal = n;
+					}
+			}
+            console.log(arbiter);
+        });
+		console.log("collBegin");
+		return true;
+	},
 	update: function () {
 		this.space.step(FIXED_DT);
+
 	},
 
 	onKeyPressed: function (key) {
 		if (key === cc.KEY.w || key === cc.KEY.up) {
 			this.directionInput |= eDirectionMask.Up;
+			this.jumpState==0?this.jumpState=1:null;
+			;
 		}
 
 		if (key === cc.KEY.s || key === cc.KEY.down) {
@@ -86,6 +127,7 @@ var Game = cc.Class.extend({
 
 		if (key === cc.KEY.w || key === cc.KEY.up) {
 			this.directionInput -= eDirectionMask.Up;
+			this.jumpState=0;
 		}
 
 		if (key === cc.KEY.s || key === cc.KEY.down) {
@@ -104,15 +146,35 @@ var Game = cc.Class.extend({
 
 	playerUpdateVelocity: function (gravity, damping, dt) {
 		var target_vx = 200 * ( (this.directionInput & eDirectionMask.Right ? 1 : 0) - (this.directionInput & eDirectionMask.Left ? 1 : 0) );
+
 		var surface_v = cp.v(target_vx, 0);
 		this.playerShape.surface_v = surface_v;
 		this.playerShape.u = 2;
+
+		groundNormal= cp.vzero;
+
+    	this.playerBody.eachArbiter(function(arbiter){
+        var i;
+			
+        for(i=0; i<arbiter.contacts.length; i++){            
+					var n = cp.v.neg(arbiter.contacts[i].n);
+					if(n.y > groundNormal.y){
+							groundNormal = n;
+					}
+//            console.log(n.y);
+			}
+        });
+
+					var jump_v = 400 * (this.directionInput & eDirectionMask.Up ? 1 : 0);
+					if(groundNormal.y > 0.0 && this.jumpState==1){
+						this.playerBody.setVel( cp.v.add(this.playerBody.getVel(), cp.v(0.0, jump_v)));
+						this.jumpState=2;
+					}
 
 		cp.Body.prototype.velocity_func.call(this.playerBody, gravity, damping, dt);
 	}
 
 });
-
 
 
 
